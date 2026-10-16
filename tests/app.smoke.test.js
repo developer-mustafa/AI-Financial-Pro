@@ -118,6 +118,7 @@ describe('application smoke test', () => {
       ['/goals', 'goals'],
       ['/reports', 'reports'],
       ['/accounts', 'accounts'],
+      ['/ai', 'ai'],
       ['/settings', 'settings'],
       ['/admin', 'admin'],
       ['/workspace', 'workspace'],

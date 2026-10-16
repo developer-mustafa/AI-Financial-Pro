@@ -32,6 +32,7 @@ export const NAV_SECTIONS = [
     id: 'insight',
     label: 'Insights',
     items: [
+      { id: 'ai', label: 'AI Assistant', path: '/ai', icon: 'sparkles' },
       { id: 'reports', label: 'Reports & Analytics', path: '/reports', icon: 'chart-column' },
       { id: 'accounts', label: 'Accounts & Wallets', path: '/accounts', icon: 'wallet' }
     ]
@@ -72,6 +73,7 @@ export const ROUTE_TITLES = {
   goals: 'Financial Goals',
   reports: 'Reports & Analytics',
   accounts: 'Accounts & Wallets',
+  ai: 'AI Assistant',
   settings: 'Settings',
   workspace: 'Workspace',
   admin: 'User Management',

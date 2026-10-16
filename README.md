@@ -111,12 +111,13 @@ spendwise/
 │   │   ├── transactions/       # transactionService + list view + form
 │   │   ├── categories/  accounts/  budgets/  recurring/  goals/
 │   │   ├── reports/            # reportService + reportView (5 tabs, 6 charts)
+│   │   ├── ai/                 # AI assistant view (advisor chat + insights)
 │   │   ├── workspace/          # workspace admin (profile + members + audit)
 │   │   ├── platform/           # platform-admin console (overview/tenants/audit)
 │   │   ├── admin/              # super-admin user management (service + view)
 │   │   └── settings/           # appearance, financial prefs, data, cloud, privacy
 │   ├── services/               # storage, apiClient, auth, tenant, sync, export,
-│   │                           # import, backup, notification
+│   │                           # import, backup, notification, ai
 │   ├── utils/                  # calculations, currency, date, validation, ids,
 │   │                           # dom, sanitize
 │   └── styles/input.css        # Tailwind source
@@ -274,6 +275,20 @@ Legend: ✅ implemented & covered by tests · 🟡 implemented, needs live infra
   members, audit). See
   [`backend/README.md`](backend/README.md#super-admin--user-management).
 - 🟡 See [`backend/README.md`](backend/README.md) for the API, schema and deployment.
+
+### AI assistant (optional cloud)
+- 🟡 **AI Assistant** screen (`/ai`): ask natural-language questions about your
+  spending, plus one-click **Spending insights** (deterministic highlights + a short
+  narrative).
+- 🟡 Powered by **Google Gemini** through the Worker only: the API key is a
+  server-side secret (`GEMINI_API_KEY`), never shipped to the browser.
+- 🟡 **Privacy by design**: nothing is sent until you tick a consent box, and only a
+  small **aggregated, PII-free** summary (totals, top categories, monthly figures) is
+  sent — never your individual transactions, name or email. All arithmetic is done
+  server-side in JavaScript; the model only narrates.
+- 🟡 Tenant-scoped, rate-limited (20 requests/min per user), and **disabled until
+  configured** (fails closed). See
+  [`backend/README.md`](backend/README.md#ai-features-gemini).
 
 ### Multi-tenancy & roles (optional cloud)
 - ✅ Explicit **Platform → Tenants → tenant users → tenant-owned data** model
@@ -451,7 +466,7 @@ npm test          # frontend (Vitest + jsdom)
 cd backend && npm test   # backend (node --test, no DB/account needed)
 ```
 
-**Frontend — actually executed:** `13` files, **208 tests, all passing**. Suites:
+**Frontend — actually executed:** `14` files, **216 tests, all passing**. Suites:
 
 | File | Focus |
 |---|---|
@@ -466,18 +481,23 @@ cd backend && npm test   # backend (node --test, no DB/account needed)
 | `features.test.js` | service-level feature coverage (accounts, budgets, goals, recurring) |
 | `i18n.test.js` | dictionary parity (EN/BN), interpolation, language switching |
 | `i18n.app.test.js` | the shell renders translated copy and re-renders on a language change |
-| `app.smoke.test.js` | boots the real composition root against `index.html`, walks every route (asserting the correct module mounts, including `/workspace` and every `/platform/*` view), opens quick-add, verifies income insights, tears down cleanly |
+| `app.smoke.test.js` | boots the real composition root against `index.html`, walks every route (asserting the correct module mounts, including `/ai`, `/workspace` and every `/platform/*` view), opens quick-add, verifies income insights, tears down cleanly |
 | `neonAuth.test.js` | magic-link client (REST calls, credentials, error mapping), dual-provider sessions (adopt/refresh/logout, JWT caching + re-mint on expiry or 401), JWT expiry parsing, the API client awaiting an async token, and the Settings → Cloud sync panel (Email link tab, check-your-inbox step, resend/reset, error surfacing, signed-in method row) |
+| `ai.test.js` | the AI service façade (payload shape, consent, `periodMonths` handling), the `/ai` navigation entry + route title + EN/BN labels, and the AI view's consent gate (no request without consent) and chat flow (answer + basis rendered) |
 
-**Backend — actually executed:** `112` tests (`node --test`), covering password hashing,
+**Backend — actually executed:** `138` tests (`node --test`), covering password hashing,
 token issue/verify/expiry, request validation, CORS, security headers, request-id
 correlation, rate-limit maths, JSON parsing and
 the parameterised SQL builders, plus Neon Auth token verification (real Ed25519
 sign/verify against a synthetic JWKS: tampering, expiry, wrong issuer/algorithm/key,
-unknown `kid` refetch, 503 on an unavailable JWKS), email-based identity linking, and the
+unknown `kid` refetch, 503 on an unavailable JWKS), email-based identity linking, the
 multi-tenant logic (role/permission matrix, tenant-context resolution and rejection of
 manipulated tenant ids, personal-workspace provisioning, tenant-scoped SQL builders and
-the Neon-Auth email-verification gate) — no database or Cloudflare account required.
+the Neon-Auth email-verification gate), and the AI layer (the Gemini client's key
+handling/error mapping/timeouts and JSON extraction against a fake fetch; the
+deterministic PII-free aggregation; and the `/api/ai/*` routes' consent gate, bounded
+question, tenant-scoped queries, prompt safety and per-user quota) — no database,
+network or Cloudflare account required.
 
 **Continuous integration:** `.github/workflows/ci.yml` runs both suites on every push/PR
 (frontend `npm run build` + `npm test`; backend `npm test` + a `wrangler deploy --dry-run`
@@ -535,6 +555,10 @@ These are reported as 🟡 in the checklist rather than claimed as verified.
   `X-Frame-Options: DENY` and HSTS, plus `X-RateLimit-*` headers. A trusted inbound
   `X-Request-Id`/`CF-Ray` is echoed (unsafe values are replaced) so a client error can
   be correlated with the structured server access log without leaking internals.
+- ✅ **AI is opt-in and data-minimal.** `/api/ai/*` requires explicit consent, is
+  tenant-scoped and rate-limited, and sends only a server-computed aggregate (totals,
+  top categories, monthly figures) — never raw transactions, names or emails. The
+  Gemini key is a server secret and the model is server-configured.
 - ✅ Accessible interactions: labelled fields, focus management and focus trap in
   dialogs, Escape-to-close, reduced-motion support, keyboard-operable controls.
 
@@ -559,6 +583,10 @@ These are reported as 🟡 in the checklist rather than claimed as verified.
   static app; duplicates are prevented by the occurrence key.
 - **Cloud backend is not deployed here.** Worker/Neon steps are documented and unit-tested
   but were not run against live infrastructure (see above).
+- **AI is optional, experimental and off until configured.** The `/ai` screen needs
+  `GEMINI_API_KEY` set as a Worker secret and a signed-in cloud session; answers are
+  general information from an external provider, not financial advice, and are not
+  persisted. With no key the endpoints fail closed and the UI shows a sign-in/notice state.
 - **Density/theme** are per-device UI preferences, not synced.
 
 ---
@@ -577,4 +605,7 @@ In short:
 4. Redeploy, then verify `GET /api/health` returns `"db":"ok"`.
 5. Remove the old value from any planning notes/chat logs and, if it was ever exposed,
    rotate `AUTH_SECRET` too (this invalidates issued tokens).
+6. If a **Gemini API key** was ever pasted in plaintext, revoke it in Google AI Studio
+   (https://aistudio.google.com/apikey) and set the replacement with
+   `npx wrangler secret put GEMINI_API_KEY` — never commit it.
 # AI-Financial-Pro

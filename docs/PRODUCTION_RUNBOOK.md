@@ -281,6 +281,28 @@ tenant id → 403, suspended membership/tenant → 403, archived tenant → 403,
 member-cannot-admin → 403, unknown permission → 403, unauthenticated → 401 before any
 query, and blank/whitespace `X-Tenant-Id` treated as absent.
 
+### 5.5 AI features (optional, code-only so far)
+`/api/ai/advisor` and `/api/ai/insights` add opt-in Gemini assistance. They are **off
+until `GEMINI_API_KEY` is set** and fail closed (500 `ai_not_configured`) otherwise, so
+no additional production change is required to ship safely. To enable them:
+
+```bash
+cd backend
+npx wrangler secret put GEMINI_API_KEY   # paste the Google AI Studio key; never printed
+npx wrangler deploy
+```
+
+Guarantees: explicit server-side consent, tenant-scoped queries, a small PII-free
+aggregate only (never raw rows), per-user quota (20/min), server-configured model
+(`GEMINI_MODEL`, default `gemini-2.5-flash`) and bounded output/timeout. Errors are
+predictable: `400 consent_required`, `429 ai_rate_limited`/`ai_quota_exceeded`,
+`502/503/504` upstream, `500 ai_not_configured`. Verify with:
+
+```bash
+curl -s -X POST "$API/api/ai/insights" -H 'content-type: application/json' \
+  -d '{"consent":false}'                       # -> 400 consent_required (before auth in isolation)
+```
+
 ---
 
 ## 6. Production approval checklist
@@ -291,6 +313,7 @@ query, and blank/whitespace `X-Tenant-Id` treated as absent.
 - [ ] Migration rehearsed on staging; `verify:tenancy` green.
 - [ ] Low-traffic window agreed; rollback path verified runnable.
 - [ ] `wrangler whoami` OK; `secret list` shows expected names; `ALLOWED_ORIGINS` correct.
+- [ ] (Optional) `GEMINI_API_KEY` set only if `/api/ai/*` should be enabled; otherwise left unset.
 - [ ] Staging deploy target decided; approver + timestamp recorded.
 
 **Abort if:** `verify:tenancy` fails, `SET NOT NULL`/FK errors, `/api/health` stays

@@ -54,6 +54,8 @@ import { mount as workspaceMount } from './modules/workspace/workspaceView.js';
 import { createWorkspaceService } from './modules/workspace/workspaceService.js';
 import { mount as platformMount } from './modules/platform/platformView.js';
 import { createPlatformService } from './modules/platform/platformService.js';
+import { mount as aiMount } from './modules/ai/aiView.js';
+import { createAiService } from './services/aiService.js';
 
 /** Registers every route with the router. `meta.module` drives the module host. */
 function buildRoutes(router) {
@@ -71,6 +73,7 @@ function buildRoutes(router) {
     ['/goals', { module: 'goals', mount: goalsMount }],
     ['/reports', { module: 'reports', mount: reportsMount }],
     ['/accounts', { module: 'accounts', mount: accountsMount }],
+    ['/ai', { module: 'ai', mount: aiMount }],
     ['/settings', { module: 'settings', mount: settingsMount }],
     ['/admin', { module: 'admin', mount: adminMount }],
     ['/workspace', { module: 'workspace', mount: workspaceMount }],
@@ -132,7 +135,8 @@ export async function startApp({ mountPoint = document } = {}) {
     goals: createGoalService({ store, transactions }),
     admin: createAdminService({ client }),
     workspace: createWorkspaceService({ client }),
-    platform: createPlatformService({ client })
+    platform: createPlatformService({ client }),
+    ai: createAiService({ client })
   };
 
   /* ----------------------------------------------------------- layout dom */

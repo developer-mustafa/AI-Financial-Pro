@@ -168,6 +168,8 @@ The bearer token may be **either**:
 | GET | `/api/platform/users` | **admin** | `{items,total,…}` `?q=&limit=&offset=` |
 | GET | `/api/platform/users/:id/memberships` | **admin** | `{items}` every workspace that user belongs to |
 | GET | `/api/platform/audit` | **admin** | `{items,total,…}` `?tenantId=&actorId=&action=&limit=&offset=` |
+| POST | `/api/ai/advisor` | yes (tenant) | `{question,language?,consent:true,periodMonths?}` → `{answer,basis,model,usage,generatedAt}` |
+| POST | `/api/ai/insights` | yes (tenant) | `{language?,consent:true,periodMonths?}` → `{highlights,narrative,basis,model,usage,generatedAt}` |
 
 Anything else → 404 JSON. There is **no** raw-SQL endpoint; `/api/sql`,
 `/api/query`, `/api/exec`, `/api/raw`, etc. are explicitly refused with 403.
@@ -196,6 +198,52 @@ State shape returned by `GET /api/state`:
   "metadata": { "createdAt": "", "updatedAt": "" }
 }
 ```
+
+---
+
+## AI features (Gemini)
+
+Two read-only, opt-in endpoints add AI assistance on top of the existing data.
+They are **disabled until `GEMINI_API_KEY` is set** as a Worker secret; with no
+key they fail closed with **500 `ai_not_configured`**.
+
+| Method | Path | Body | Returns |
+|--------|------|------|---------|
+| POST | `/api/ai/advisor` | `{question, language?('en'\|'bn'), consent:true, periodMonths?(1–6)}` | `{answer, basis, model, usage, generatedAt}` |
+| POST | `/api/ai/insights` | `{language?, consent:true, periodMonths?(1–6)}` | `{highlights, narrative, basis, model, usage, generatedAt}` |
+
+Design guarantees:
+
+- **Consent is enforced server-side.** A request without `consent: true` is
+  rejected with **400 `consent_required`**; the provider is never contacted.
+- **Tenant isolation.** Both routes resolve the caller's workspace exactly like
+  every finance route and every SQL statement filters on the server-resolved
+  `tenant_id`. A client cannot request another workspace's summary.
+- **The model never sees raw rows.** `src/aiInsights.js` computes a small,
+  deterministic, PII-free aggregate (totals, top categories, month-by-month
+  figures, savings rate). Arithmetic is done in JavaScript — the model only
+  narrates. No emails, names, account numbers or individual transactions are sent.
+- **One egress point.** All provider calls go through `src/gemini.js`. The API
+  key travels in the `x-goog-api-key` header (never a URL), is never logged, and
+  upstream response bodies are never surfaced to clients.
+- **Bounded cost.** Per-user quota of 20 requests/minute, an input cap
+  (question ≤ 500 chars), a 64 KiB request-body cap on these routes, a
+  server-configured model (`GEMINI_MODEL`) and output-token/timeout limits.
+- **Predictable errors.** `400 consent_required`, `400 validation_error`,
+  `429 ai_rate_limited`, `429 ai_quota_exceeded`, `502 ai_upstream_error` /
+  `ai_bad_response` / `ai_empty_response`, `503 ai_unavailable`, `504 ai_timeout`,
+  `500 ai_not_configured`.
+
+Configure it with:
+
+```bash
+cd backend
+npx wrangler secret put GEMINI_API_KEY     # paste the key from Google AI Studio
+npx wrangler deploy
+```
+
+`GEMINI_MODEL` (default `gemini-2.5-flash`) is a **non-secret** `[vars]` entry in
+`wrangler.toml`. For local development put both in `.dev.vars`.
 
 ---
 
@@ -238,6 +286,10 @@ State shape returned by `GET /api/state`:
 - **Rate limiting:** in-memory fixed window, 120 req/min per IP+method (429 +
   `Retry-After`). Every response also carries `X-RateLimit-Limit`,
   `X-RateLimit-Remaining` and `X-RateLimit-Reset`. Best-effort per isolate.
+- **AI safety:** `/api/ai/*` additionally requires explicit consent, sends only a
+  server-computed PII-free aggregate (never raw rows), enforces a per-user quota
+  (20/min), and keeps the Gemini key server-side only (header, never logged). See
+  [AI features (Gemini)](#ai-features-gemini).
 - **Body cap:** 1 MiB (413).
 - **Headers:** `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
   `X-Frame-Options: DENY`, and `Strict-Transport-Security` (2 years, subdomains,
@@ -530,6 +582,7 @@ cd backend
 npx wrangler secret put DATABASE_URL    # paste the Neon connection string
 npx wrangler secret put AUTH_SECRET     # paste 32+ random chars (same generator as above)
 npx wrangler secret put ADMIN_EMAILS    # optional: comma-separated platform-admin emails
+npx wrangler secret put GEMINI_API_KEY  # optional: enables /api/ai/* (Google AI Studio key)
 
 npx wrangler secret list                # verify names (values are never shown)
 ```

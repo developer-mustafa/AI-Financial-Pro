@@ -20,6 +20,14 @@ AUTH_SECRET="<32+ random chars>"
 # only to use a different admin list during local `wrangler dev`.
 # ADMIN_EMAILS="you@example.com"
 
+# --- Gemini AI features (/api/ai/*) -----------------------------------------
+# Server-side ONLY. Never expose this in browser code or commit it. When unset,
+# the AI endpoints return 500 ai_not_configured and the UI hides the feature.
+# Get a free-tier key from Google AI Studio: https://aistudio.google.com/apikey
+GEMINI_API_KEY="<your Gemini API key>"
+# Optional model override (defaults to gemini-2.5-flash).
+# GEMINI_MODEL="gemini-2.5-flash"
+
 # --- Magic-link sign-in (Managed Better Auth / Neon Auth) -------------------
 # PUBLIC values: they are shipped to the browser anyway, so they are NOT
 # secrets. They normally live in wrangler.toml [vars]; override here only to

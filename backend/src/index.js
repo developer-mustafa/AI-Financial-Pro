@@ -30,6 +30,7 @@ import * as syncRoutes from './routes/sync.js';
 import * as adminRoutes from './routes/admin.js';
 import * as tenantRoutes from './routes/tenant.js';
 import * as platformRoutes from './routes/platform.js';
+import * as aiRoutes from './routes/ai.js';
 
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MiB
 const RATE_LIMIT = 120; // requests
@@ -286,6 +287,10 @@ async function handle(request, env, trace = {}) {
       return platformRoutes.listUserTenants(ctx);
     case 'platform.audit':
       return platformRoutes.listAudit(ctx);
+    case 'ai.advisor':
+      return aiRoutes.advisor(ctx);
+    case 'ai.insights':
+      return aiRoutes.insights(ctx);
     default:
       return error('not_found', 'Not found', 404);
   }
@@ -324,6 +329,15 @@ function matchRoute(method, segments) {
   }
 
   if (a === 'sync' && b === undefined && method === 'POST') return { name: 'sync', params: {}, tenant: true };
+
+  // AI features. Read-only over the caller's own workspace; `tenant: true`
+  // makes the router resolve+verify the workspace before the handler runs, and
+  // each handler additionally requires explicit consent and enforces a quota.
+  if (a === 'ai' && rest <= 0) {
+    if (b === 'advisor' && method === 'POST') return { name: 'ai.advisor', params: {}, tenant: true };
+    if (b === 'insights' && method === 'POST') return { name: 'ai.insights', params: {}, tenant: true };
+    return null;
+  }
 
   // Tenant self-management. Every route here resolves the caller's tenant
   // context; per-action permissions are enforced inside the handlers.
