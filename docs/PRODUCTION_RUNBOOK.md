@@ -19,12 +19,14 @@
 | 2026-10-16T13:29Z | 🔴 `wrangler secret put AUTH_SECRET` | same | `AUTH_SECRET` secret set |
 | 2026-10-16T13:30Z | 🔴 `npm run deploy` | Cloudflare | deployed → `https://spendwise-api.mustafa-rahman-official.workers.dev` (version `07ef3400-…`) |
 | 2026-10-16T13:30Z | 🔵 live health + negative checks | deployed Worker | `db:"ok"`; `401`/`403`/`404`; HSTS + rate-limit + `X-Request-Id` headers present |
+| 2026-10-16T15:11Z | 🔴 `npm run deploy` (AI feature) | Cloudflare | deployed → version `f507c0cf-…`; `/api/ai/*` live but **disabled** (401 unauth; 500 `ai_not_configured` once authenticated, since no key is set) |
 
 **Deployment findings (read-only):** wrangler is authenticated (account
 `638331d0b7fd99029b739ad7adc4a5af`). The Worker `spendwise-api` **did not exist** and was
 created by this deploy. `ADMIN_EMAILS` is **not set** (platform-admin bootstrap disabled
 until set); `ALLOWED_ORIGINS` is still **localhost-only** (set the real frontend origin
-before shipping a hosted frontend).
+before shipping a hosted frontend). `GEMINI_API_KEY` is **not set** — the AI endpoints are
+live but fail closed until it is added (see §5.5).
 
 ---
 
