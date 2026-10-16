@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Local secrets / environment (NEVER commit these)
+.dev.vars
+.env
+.env.*
+!.env.example
+!.dev.vars.example
+
+# Wrangler build cache
+.wrangler/
+
+# Logs / OS cruft
+*.log
+.DS_Store
+Thumbs.db

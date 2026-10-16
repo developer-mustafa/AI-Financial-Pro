@@ -1,0 +1,69 @@
+# Cloudflare Workers configuration for the SpendWise API.
+# Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "spendwise-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Non-secret, environment-level configuration. Safe to commit.
+[vars]
+ALLOWED_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5500,http://127.0.0.1:5500"
+ENVIRONMENT = "development"
+
+# Comma-separated emails that are promoted to the "admin" (PLATFORM_ADMIN) role
+# the first time they sign in. This is the ONLY way to create the first platform
+# administrator — there is no hard-coded account and public signup can never
+# self-assign the role.
+#
+# SECURITY: do NOT commit real addresses here (they leak into git history and
+# make the deployment an obvious target). Set this as a SECRET instead:
+#
+#   npx wrangler secret put ADMIN_EMAILS
+#     -> paste e.g. "owner@example.com,ops@example.com"
+#
+# Leaving it empty disables the bootstrap (existing admins keep their role), so
+# set it at least once while bringing up a new deployment.
+#
+# NOTE: it is a SECRET, so it deliberately does NOT appear in [vars] below —
+# declaring it as a var would collide with the secret of the same name.
+
+# Managed Better Auth (Neon Auth) — PUBLIC values only. These are handed to the
+# browser anyway (the app fetches the JWKS endpoint directly), so they are not
+# secrets. Set them to the Auth Base URL shown in the Neon Console under
+# Settings → Better Auth (Configuration tab).
+#
+#   NEON_AUTH_BASE_URL  e.g. https://<endpoint>.neonauth.<region>.aws.neon.tech/<db>/auth
+#   NEON_AUTH_JWKS_URL  optional override; defaults to
+#                       "${NEON_AUTH_BASE_URL}/.well-known/jwks.json"
+#
+# Leave both empty to disable magic-link sign-in; the Worker then only accepts
+# its own email + password tokens.
+NEON_AUTH_BASE_URL = "https://ep-noisy-field-b3vzkk80.neonauth.c-4.ap-southeast-1.aws.neon.tech/expense-tracker-pro/auth"
+NEON_AUTH_JWKS_URL = ""
+
+# Observability (Workers Logs / metrics) — see
+# https://developers.cloudflare.com/workers/observability/
+[observability]
+enabled = true
+
+# ---------------------------------------------------------------------------
+# SECRETS — never put these in this file and never commit them.
+# Set them with Wrangler (each one is a hidden prompt, so the value is not
+# written to shell history or the repo):
+#
+#   npx wrangler secret put DATABASE_URL
+#     -> paste the Neon connection string (postgresql://...?...sslmode=require)
+#
+#   npx wrangler secret put AUTH_SECRET
+#     -> paste 32+ random chars, e.g. from:
+#        node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+#
+# For LOCAL development, copy `.dev.vars.example` to `.dev.vars` and fill in
+# the values. Wrangler loads `.dev.vars` automatically with `wrangler dev`.
+# `.dev.vars` is git-ignored.
+#
+# To list / delete secrets:
+#   npx wrangler secret list
+#   npx wrangler secret delete <NAME>
+# ---------------------------------------------------------------------------

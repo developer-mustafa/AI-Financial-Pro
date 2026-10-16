@@ -1,0 +1,28 @@
+{
+  "name": "spendwise-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SpendWise backend API — Cloudflare Workers (ES modules) + @neondatabase/serverless + NeonDB PostgreSQL.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "migrate": "node scripts/migrate.mjs",
+    "migrate:dry": "node scripts/migrate.mjs --dry-run",
+    "migrate:status": "node scripts/migrate-status.mjs",
+    "preflight:tenancy": "node scripts/preflight-tenancy.mjs",
+    "snapshot:data": "node scripts/snapshot-data.mjs",
+    "verify:tenancy": "node scripts/verify-tenancy.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  },
+  "devDependencies": {
+    "wrangler": "^3.99.0"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.wrangler/
+.DS_Store
+*.log
+backend/.dev.vars
+backend/.env
+.DS_STORE
+
+# internal planning notes (may contain secrets) — never publish
+prompt2.txt

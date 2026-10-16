@@ -1,0 +1,344 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   ------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas-light text-slate-800 antialiased dark:bg-canvas-dark dark:text-slate-200;
+  }
+
+  /* Bengali (বাংলা) typography -------------------------------------------
+     The interface language writes `lang="bn"` onto <html> (see src/i18n), so
+     a Bengali-capable font stack is applied globally. Numeric/`font-numeric`
+     elements keep their tabular figures because they set font-family directly. */
+  html[lang='bn'] {
+    font-family: 'Noto Sans Bengali', 'Hind Siliguri', 'Nirmala UI', 'Vrinda', 'SolaimanLipi', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+
+  /* Scrollbars ------------------------------------------------------------ */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(148 163 184 / 0.6) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  *::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-400/50 hover:bg-slate-400/80;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reusable components
+   ------------------------------------------------------------------------- */
+@layer components {
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900;
+  }
+
+  .card-pad {
+    @apply p-4 sm:p-5;
+  }
+
+  .card-title {
+    @apply text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .muted {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+
+  .hairline {
+    @apply border-slate-200 dark:border-slate-800;
+  }
+
+  /* Buttons --------------------------------------------------------------- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-xl border border-transparent px-3.5 py-2
+           text-sm font-medium transition-colors duration-150
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800;
+  }
+  .btn-secondary {
+    @apply border-slate-200 bg-white text-slate-700 hover:bg-slate-50
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+  }
+  .btn-ghost {
+    @apply text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800;
+  }
+  .btn-danger {
+    @apply bg-expense-600 text-white hover:bg-expense-700;
+  }
+  .btn-success {
+    @apply bg-income-600 text-white hover:bg-income-700;
+  }
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+  .btn-icon {
+    @apply h-9 w-9 rounded-xl p-0;
+  }
+  .btn-icon-sm {
+    @apply h-7 w-7 rounded-lg p-0 text-xs;
+  }
+
+  /* Forms ----------------------------------------------------------------- */
+  .label {
+    @apply mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300;
+  }
+  .input,
+  .select,
+  .textarea {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800
+           placeholder:text-slate-400
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30
+           disabled:bg-slate-50 disabled:text-slate-400
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500
+           dark:disabled:bg-slate-800/50;
+  }
+  .select {
+    @apply appearance-none bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.6rem center;
+    background-size: 1rem;
+  }
+  .textarea {
+    @apply min-h-[76px] resize-y;
+  }
+  .field-error {
+    @apply mt-1 text-xs font-medium text-expense-600 dark:text-expense-400;
+  }
+  .input[aria-invalid='true'],
+  .select[aria-invalid='true'],
+  .textarea[aria-invalid='true'] {
+    @apply border-expense-500 focus:ring-expense-500/30;
+  }
+
+  /* Chips / badges -------------------------------------------------------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1
+           text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50
+           dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700;
+  }
+  .chip-active {
+    @apply border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-500/15 dark:text-brand-200;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide;
+  }
+  .badge-income {
+    @apply bg-income-100 text-income-700 dark:bg-income-500/15 dark:text-income-400;
+  }
+  .badge-expense {
+    @apply bg-expense-100 text-expense-700 dark:bg-expense-500/15 dark:text-expense-400;
+  }
+  .badge-transfer {
+    @apply bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300;
+  }
+  .badge-neutral {
+    @apply bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
+  }
+  .badge-warning {
+    @apply bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300;
+  }
+
+  /* Tables ---------------------------------------------------------------- */
+  .table-wrap {
+    @apply w-full overflow-x-auto;
+  }
+  table.data {
+    @apply w-full border-collapse text-sm;
+  }
+  table.data thead th {
+    @apply whitespace-nowrap border-b border-slate-200 px-3 py-2.5 text-left text-[11px] font-semibold
+           uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:text-slate-400;
+  }
+  table.data tbody td {
+    @apply border-b border-slate-100 px-3 py-2.5 align-middle dark:border-slate-800/70;
+  }
+  table.data tbody tr:hover {
+    @apply bg-slate-50/70 dark:bg-slate-800/40;
+  }
+  table.data tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .num {
+    @apply font-numeric tabular-nums;
+  }
+
+  /* Progress -------------------------------------------------------------- */
+  .progress {
+    @apply h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800;
+  }
+  .progress > span {
+    @apply block h-full rounded-full bg-brand-500 transition-[width] duration-300;
+  }
+
+  /* Nav ------------------------------------------------------------------ */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-colors
+           hover:bg-slate-100 hover:text-slate-900
+           dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+  }
+  .nav-item[aria-current='page'] {
+    @apply bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200;
+  }
+  .nav-item[aria-current='page'] svg {
+    @apply text-brand-600 dark:text-brand-300;
+  }
+  .nav-item svg {
+    @apply h-[18px] w-[18px] shrink-0;
+  }
+
+  /* Collapsible desktop rail ---------------------------------------------
+     Collapsing is driven purely by `data-collapsed` on the rail so the
+     quick-add label, brand and footer react without a re-render. */
+  .sidebar-scroll {
+    overscroll-behavior: contain;
+  }
+  [data-sidebar][data-collapsed='true'] :is(.sidebar-copy, .nav-label, .nav-section-label, [data-brand-label]),
+  html[data-sidebar-collapsed='true'] [data-sidebar] :is(.sidebar-copy, .nav-label, .nav-section-label, [data-brand-label]) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  [data-sidebar][data-collapsed='true'] .sidebar-brand,
+  html[data-sidebar-collapsed='true'] [data-sidebar] .sidebar-brand {
+    flex-direction: column;
+    gap: 0.5rem;
+    border-bottom: 0;
+  }
+  [data-sidebar][data-collapsed='true'] .sidebar-footer,
+  html[data-sidebar-collapsed='true'] [data-sidebar] .sidebar-footer {
+    display: none;
+  }
+  [data-sidebar][data-collapsed='true'] .nav-item,
+  html[data-sidebar-collapsed='true'] [data-sidebar] .nav-item {
+    position: relative;
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+  [data-sidebar][data-collapsed='true'] .nav-item .nav-badge,
+  html[data-sidebar-collapsed='true'] [data-sidebar] .nav-item .nav-badge {
+    @apply absolute right-1.5 top-1.5 h-2 w-2 min-w-0 overflow-hidden rounded-full bg-expense-500 p-0;
+    font-size: 0;
+  }
+
+  /* Mobile bottom navigation ---------------------------------------------- */
+  .mobile-nav-item {
+    @apply flex flex-1 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[10px] font-medium
+           text-slate-500 transition-colors dark:text-slate-400;
+  }
+  .mobile-nav-item[aria-current='page'] {
+    @apply text-brand-600 dark:text-brand-300;
+  }
+  .mobile-nav-item[aria-current='page'] .mobile-nav-label {
+    @apply font-semibold;
+  }
+  .mobile-nav-label {
+    @apply max-w-full truncate;
+  }
+  .mobile-nav-add-slot {
+    @apply relative flex w-14 shrink-0 items-stretch justify-center;
+  }
+  .mobile-nav-add {
+    @apply absolute -top-4 grid h-12 w-12 place-items-center rounded-full bg-brand-600 text-white
+           shadow-pop ring-4 ring-white transition-transform active:scale-95 dark:ring-slate-900;
+  }
+
+  .section-title {
+    @apply text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .kbd {
+    @apply rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-numeric text-[10px] text-slate-500
+           dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800;
+  }
+
+  /* Density --------------------------------------------------------------
+     The Appearance setting writes `data-density="compact"` onto <html>
+     (before first paint for a stored preference). These rules give that
+     setting a real, global effect. */
+  [data-density='compact'] .card-pad {
+    @apply p-3 sm:p-4;
+  }
+  [data-density='compact'] table.data thead th,
+  [data-density='compact'] table.data tbody td {
+    @apply py-1.5;
+  }
+  [data-density='compact'] .nav-item {
+    @apply py-1.5;
+  }
+  [data-density='compact'] .btn {
+    @apply py-1.5;
+  }
+  [data-density='compact'] .btn-sm {
+    @apply py-1 !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Pre-hydration rail width
+   ---------------------------------------------------------------------------
+   The theme bootstrap writes `data-sidebar-collapsed` onto <html> before the
+   app boots, so a stored "collapsed" choice renders collapsed at first paint.
+   The rail's own `data-collapsed` state takes over once it initialises. */
+@layer utilities {
+  html[data-sidebar-collapsed='true'] [data-sidebar] {
+    width: 16.5rem;
+  }
+  @media (min-width: 1024px) {
+    html[data-sidebar-collapsed='true'] [data-sidebar] {
+      width: 4.75rem;
+    }
+  }
+}

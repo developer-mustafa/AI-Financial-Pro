@@ -1,0 +1,36 @@
+# Copy this file to `.dev.vars` and fill in real values for LOCAL development
+# only. `.dev.vars` is git-ignored — never commit real credentials.
+#
+#   cp .dev.vars.example .dev.vars
+#
+# `wrangler dev` loads `.dev.vars` automatically. The migration script
+# (scripts/migrate.mjs) also reads `.dev.vars` and `.env` from this directory.
+
+# NeonDB pooled connection string. Keep `sslmode=require`. Do NOT commit.
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+
+# HMAC signing key for auth tokens. Must be >= 32 characters.
+# Generate one with:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+AUTH_SECRET="<32+ random chars>"
+
+# Comma-separated emails promoted to the "admin" (super-admin) role on first
+# sign-in. Bootstrap for the first administrator. This is a SECRET in
+# production: set it with `npx wrangler secret put ADMIN_EMAILS`. Set it here
+# only to use a different admin list during local `wrangler dev`.
+# ADMIN_EMAILS="you@example.com"
+
+# --- Magic-link sign-in (Managed Better Auth / Neon Auth) -------------------
+# PUBLIC values: they are shipped to the browser anyway, so they are NOT
+# secrets. They normally live in wrangler.toml [vars]; override here only to
+# point local `wrangler dev` at a different branch.
+#
+#   NEON_AUTH_BASE_URL  Auth Base URL from the Neon Console
+#                       (Settings -> Better Auth -> Configuration), e.g.
+#                       https://<endpoint>.neonauth.<region>.aws.neon.tech/<db>/auth
+#   NEON_AUTH_JWKS_URL  optional; defaults to
+#                       "${NEON_AUTH_BASE_URL}/.well-known/jwks.json"
+#
+# Leave them unset to disable magic-link sign-in.
+# NEON_AUTH_BASE_URL="https://ep-xxxx.neonauth.us-east-2.aws.neon.tech/expense-tracker-pro/auth"
+# NEON_AUTH_JWKS_URL=""

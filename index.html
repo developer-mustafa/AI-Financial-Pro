@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="SpendWise — a local-first personal finance tracker with optional encrypted cloud sync." />
+    <title>SpendWise · Personal Finance Tracker</title>
+
+    <!--
+      Theme bootstrap. Runs before the stylesheet is applied so the correct
+      colour scheme is on <html> at first paint: no white flash in dark mode.
+      Kept tiny and dependency-free.
+    -->
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('spendwise.theme') || 'system';
+          var dark =
+            mode === 'dark' ||
+            (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          root.classList.toggle('dark', dark);
+          root.dataset.theme = dark ? 'dark' : 'light';
+          root.style.colorScheme = dark ? 'dark' : 'light';
+
+          var prefs = JSON.parse(localStorage.getItem('spendwise.ui.v1') || '{}') || {};
+          if (prefs.density === 'compact') root.dataset.density = 'compact';
+          if (prefs.sidebarCollapsed) root.dataset.sidebarCollapsed = 'true';
+        } catch (error) {
+          /* private browsing / disabled storage: fall back to system colours */
+        }
+      })();
+    </script>
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M9 21.5 14 13l4 5 2.5-3.5L23 21.5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="assets/css/app.css" />
+  </head>
+
+  <body class="min-h-screen">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[80] focus:rounded-lg focus:bg-brand-600 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+      >Skip to content</a
+    >
+
+    <div id="shell" class="flex min-h-screen">
+      <!-- Desktop sidebar rail. The brand, the primary action and the footer
+           stay put; only the section list scrolls. -->
+      <aside
+        data-sidebar
+        data-collapsed="false"
+        aria-label="Primary"
+        class="sticky top-0 hidden h-screen w-[16.5rem] shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 dark:border-slate-800 dark:bg-slate-900 lg:flex"
+      >
+        <div class="sidebar-brand flex items-center gap-2 px-3 pb-1 pt-4">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+              <path d="M4 17.5 9.5 9l3.5 4.5 2.5-3L20 17.5" />
+            </svg>
+          </span>
+          <span data-brand-label class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50">SpendWise</span>
+            <span data-brand-tagline class="block truncate text-[11px] text-slate-400 dark:text-slate-500">Personal Finance</span>
+          </span>
+          <button type="button" data-sidebar-collapse class="btn btn-ghost btn-icon-sm shrink-0" aria-label="Collapse sidebar"></button>
+        </div>
+
+        <div class="px-3 pt-3">
+          <button type="button" data-quick-add class="btn btn-primary w-full" title="Add transaction (n)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span class="sidebar-copy">Add transaction</span>
+          </button>
+        </div>
+
+        <nav data-sidebar-nav class="sidebar-scroll flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-3 pt-2" aria-label="Sections"></nav>
+
+        <div class="sidebar-footer mt-auto border-t border-slate-200 px-3 py-3 dark:border-slate-800">
+          <a
+            data-block-new
+            href="#/transactions"
+            class="flex items-start gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand-600 dark:text-brand-300" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span class="min-w-0">
+              <span class="block text-xs font-semibold text-slate-700 dark:text-slate-200">New entry</span>
+              <span class="mt-0.5 block text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+                Press <span class="kbd">n</span> anywhere to record income, an expense or a transfer.
+              </span>
+            </span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Content column -->
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header
+          data-topbar
+          class="relative sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:px-4"
+        ></header>
+
+        <main
+          id="main-content"
+          data-main
+          class="mx-auto w-full max-w-6xl flex-1 px-3 pb-28 pt-4 sm:px-5 sm:pt-6 lg:pb-10"
+        ></main>
+
+        <nav
+          data-mobile-nav
+          aria-label="Primary (mobile)"
+          class="fixed inset-x-0 bottom-0 z-30 flex min-h-[3.5rem] items-stretch border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 lg:hidden"
+        ></nav>
+      </div>
+    </div>
+
+    <!-- Mobile off-canvas navigation -->
+    <div data-drawer-backdrop class="fixed inset-0 z-40 hidden bg-slate-900/50 backdrop-blur-sm lg:hidden"></div>
+    <aside
+      data-drawer
+      aria-hidden="true"
+      aria-label="Navigation"
+      class="fixed inset-y-0 left-0 z-50 flex w-[17rem] -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform duration-200 dark:border-slate-800 dark:bg-slate-900 lg:hidden"
+    >
+      <div class="flex items-center gap-2 border-b border-slate-200 px-4 py-4 dark:border-slate-800">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-white">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true">
+            <path d="M4 17.5 9.5 9l3.5 4.5 2.5-3L20 17.5" />
+          </svg>
+        </span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-50">SpendWise</span>
+          <span class="block truncate text-[11px] text-slate-400 dark:text-slate-500">Personal Finance</span>
+        </span>
+        <button type="button" data-drawer-close class="btn btn-ghost btn-icon-sm shrink-0" aria-label="Close navigation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="px-3 pt-3">
+        <button type="button" data-drawer-quick-add class="btn btn-primary w-full">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 shrink-0" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span>Add transaction</span>
+        </button>
+      </div>
+
+      <nav data-drawer-nav class="sidebar-scroll flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-3" aria-label="Sections (mobile)"></nav>
+
+      <div data-local-note class="border-t border-slate-200 px-4 py-3 text-[11px] text-slate-400 dark:border-slate-800 dark:text-slate-500">
+        Local-first · data stays in this browser.
+      </div>
+    </aside>
+
+    <noscript>
+      <div class="fixed inset-0 z-[90] grid place-items-center bg-white p-6 text-center dark:bg-slate-900">
+        <p class="max-w-sm text-sm text-slate-600 dark:text-slate-300">
+          SpendWise needs JavaScript enabled. Everything is stored locally in this browser.
+        </p>
+      </div>
+    </noscript>
+
+    <!-- Public runtime configuration (no secrets). Must load before the app. -->
+    <script src="runtime-config.js"></script>
+    <!-- Vendored icon library (UMD, exposes globalThis.lucide). -->
+    <script src="assets/vendor/lucide.js"></script>
+    <!-- Application (ES modules). -->
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

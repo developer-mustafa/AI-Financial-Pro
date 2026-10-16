@@ -1,0 +1,28 @@
+{
+  "name": "spendwise",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SpendWise — Personal Finance Tracker. Vanilla JS (ES modules) + Tailwind CSS + Chart.js, local-first with optional NeonDB cloud sync.",
+  "scripts": {
+    "css:dev": "tailwindcss -i ./src/styles/input.css -o ./assets/css/app.css --watch",
+    "css:build": "tailwindcss -i ./src/styles/input.css -o ./assets/css/app.css --minify",
+    "vendor": "node scripts/vendor.mjs",
+    "build": "npm run vendor && npm run css:build",
+    "dev": "npx --yes serve -l 5173 .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "chart.js": "^4.4.7",
+    "jsdom": "^25.0.1",
+    "lucide": "^0.469.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0"
+  }
+}
